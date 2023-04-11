@@ -17,7 +17,7 @@ class App(tk.Tk):
     WIDTH =800
     HEIGHT = 500
     ALLOWED_FILES = [("Excel files", "*.xlsx"), ("XLS files", "*.xls")]
-    selectedFiles = set()
+    selectedFiles = dict()
     LEFT_BG_COLOR = "#0B2447"
     RIGHT_BG_COLOR = "#F6F1F1"
     errors = []
@@ -125,20 +125,28 @@ class App(tk.Tk):
 
 
     def createFileField(self):
-        # create label
-        fileLabel = tk.Label(master=self.selectedFilesFrame, bg=self.RIGHT_BG_COLOR, fg="black", text="", font=("Arial", 15))
-
         # helper function to select a file
         def selectFile():
           fileName = askopenfilename(title="select", filetypes=self.ALLOWED_FILES)
           if fileName:
+              # print(self.selectedFiles)
               showinfo(title = "Selected file is: ", message=fileName)              
               # show file name on the right side
               if fileName not in self.selectedFiles:
-                self.selectedFiles.add(fileName)
+                for savedFileName in self.selectedFiles.keys():
+                  prevFile = chooseFileButton["text"]
+                  if prevFile in savedFileName:
+                    self.selectedFiles[savedFileName].destroy() # remove label
+                    del self.selectedFiles[savedFileName] # remove from dictionary
+                    break
+                fileLabel = tk.Label(master=self.selectedFilesFrame, bg=self.RIGHT_BG_COLOR, fg="black", text="", font=("Arial", 15))
+                # add new file
+                self.selectedFiles[fileName] = fileLabel
+                # add file label to right side
                 fileLabel["text"] = fileName
                 fileLabel.pack()
-              chooseFileButton["text"] = fileName.split("/")[-1]
+                chooseFileButton["text"] = fileName.split("/")[-1]
+                # print(self.selectedFiles)
           else:
               showinfo(title = "You haven't selected a file")
         chooseFileButton = ttk.Button(master=self.leftFrame, text="Choose file for analysis", command=selectFile, style="AddFile.TButton")
