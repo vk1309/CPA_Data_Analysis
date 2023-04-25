@@ -157,23 +157,24 @@ class App(tk.Tk):
         chooseFileButton.pack(pady=5)
 
     def createDirectoryField(self):
-        def selectDir():
-          userDir = askdirectory(title="select a folder", mustexist=True)
-          if userDir:
-            showinfo(title = "Selected folder is: ", message=userDir)
-            for file in os.listdir(userDir):
-               if os.path.isfile(os.path.join(userDir, file)) and (file.endswith(".xlsx") or file.endswith(".xls")):
-                  fileName = os.path.join(userDir, file)
-                  if fileName not in self.selectedFiles:
-                    self.selectedFiles.add(fileName)
-                    # create tkinter label for each file, and add to right layout
-                    tk.Label(master=self.selectedFilesFrame, bg=self.RIGHT_BG_COLOR, fg="black", text=fileName, font=("Arial", 15)).pack()
-          else:
-            showinfo(title = "You haven't selected a folder")
-        style = ttk.Style()
-        style.configure("AddFile.TButton", background=self.RIGHT_BG_COLOR, foreground="black", font=("Arial", 10))
-        addFolderButton = ttk.Button(master=self.leftFrame, text="Choose folder for upload", command=selectDir, style="AddFile.TButton")
-        addFolderButton.pack()
+      def selectDir():
+        userDir = askdirectory(title="select a folder", mustexist=True)
+        if userDir:
+          showinfo(title = "Selected folder is: ", message=userDir)
+          for file in os.listdir(userDir):
+              if os.path.isfile(os.path.join(userDir, file)) and (file.endswith(".xlsx") or file.endswith(".xls")):
+                fileName = os.path.join(userDir, file)
+                if fileName not in self.selectedFiles:
+                  # create tkinter label for each file, and add to right layout
+                  fileLabel = tk.Label(master=self.selectedFilesFrame, bg=self.RIGHT_BG_COLOR, fg="black", text=fileName, font=("Arial", 15)).pack()
+                  self.selectedFiles[fileName] = fileLabel
+          addFolderButton['text'] = userDir.split("/")[-1]
+        else:
+          showinfo(title = "You haven't selected a folder")
+      style = ttk.Style()
+      style.configure("AddFile.TButton", background=self.RIGHT_BG_COLOR, foreground="black", font=("Arial", 10))
+      addFolderButton = ttk.Button(master=self.leftFrame, text="Choose folder for upload", command=selectDir, style="AddFile.TButton")
+      addFolderButton.pack()
 
 # main
 app = App()
