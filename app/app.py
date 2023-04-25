@@ -10,7 +10,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename, askdirectory
 from tkinter.messagebox import showinfo
-
+from analysis import CpaDataAnalysis
 
 class App(tk.Tk):
     
@@ -20,7 +20,8 @@ class App(tk.Tk):
     selectedFiles = dict()
     LEFT_BG_COLOR = "#0B2447"
     RIGHT_BG_COLOR = "#F6F1F1"
-    errors = []
+    PROGRESSBAR_MIN = 0
+    PROGRESSBAR_MAX = 5000
 
     def __init__(self):
         super().__init__()
@@ -30,9 +31,12 @@ class App(tk.Tk):
 
 
     def generateReport(self):
-      print(self.selectedFiles)
+      print('selected files: ', self.selectedFiles)
       self.startProgressBar()
-    
+      # Actual processing
+      cpaDataAnalysis = CpaDataAnalysis(self.selectedFiles, self.updateProgressBar, self.updateStatus)
+      cpaDataAnalysis.run()
+
     def generateInitLayout(self):
       # left layout 
       self.leftFrame = tk.Frame(self, width=400, height=500, bg=self.LEFT_BG_COLOR)
@@ -68,27 +72,27 @@ class App(tk.Tk):
       self.progressBar.pack(pady=(5,0))
 
       # status of processing
-      self.processStatus = tk.Label(master=self.rightFrame, bg=self.RIGHT_BG_COLOR, fg="black", text="", font=("Arial", 15)).pack(pady=10)
+      self.processStatus = tk.Label(master=self.rightFrame, bg=self.RIGHT_BG_COLOR, fg="red", text="", font=("Arial", 15)).pack(pady=10)
 
+    def updateStatus(self, status):
+      self.processStatus["text"] = self.status
 
     def startProgressBar(self):
         # progress bar information
-        PROGRESSBAR_MIN = 0
-        PROGRESSBAR_MAX = 5000
-        self.bytes = PROGRESSBAR_MIN
-        self.maxbytes = PROGRESSBAR_MAX
-        self.progressBar["value"] = PROGRESSBAR_MIN
-        self.progressBar["maximum"] = PROGRESSBAR_MAX
-        self.updateProgressBar()
+        self.bytes = self.PROGRESSBAR_MIN
+        self.maxbytes = self.PROGRESSBAR_MAX
+        self.progressBar["value"] = self.PROGRESSBAR_MIN
+        self.progressBar["maximum"] = self.PROGRESSBAR_MAX
+        # self.updateProgressBar()
 
 
     def updateProgressBar(self):
         '''simulate reading 500 bytes; update progress bar'''
-        self.bytes += 500
+        unitOfUpdate = self.PROGRESSBAR_MAX // len(self.selectedFiles)
+        self.bytes += unitOfUpdate
         self.progressBar["value"] = self.bytes
-        if self.bytes < self.maxbytes:
-            self.after(200, self.updateProgressBar) # call itself after 100 ms
-
+        # if self.bytes < self.maxbytes:
+        #     self.after(200, self.updateProgressBar) # call itself after 100 ms
 
     def createFileOrDirectoryUploadOption(self):
         FILE = "File"
