@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+from datetime import date
 
 
 # 'Program of Study',
@@ -30,7 +32,9 @@ class CpaDataAnalysis:
   def __init__(self, files, updateProgressBar, updateStatus):
     self.files = files
     self.updateProgressBar = updateProgressBar
-    self.dfs = {}
+    # self.dfs = {}
+    self.updateStatus = updateStatus
+
   def preprocessor(self, file):
     # add month column to df and strip campus whitespace
     curFile = pd.read_excel(file)
@@ -43,14 +47,16 @@ class CpaDataAnalysis:
 
     try:     
       df = self.preprocessor(file)
-      self.dfs[file] = df
+      # self.dfs[file] = df
       targetColumns = ['Program of Study','Campus','Care Unit','Scheduled Services','Had Appointment?', "Cancelled?"]
-    
+      # create folder with file name and change directory
+      month = file.split("/")[-1].split(".")[0]
+      os.chdir(os.getcwd())
+      os.mkdir(month)
+      os.chdir(f"{os.getcwd()}/{month}")
       for col in targetColumns:
         # Create a new DataFrame that groups the data by the values in the column
         grouped_df = df.groupby(col).size().reset_index(name='counts').sort_values(by='counts', ascending=False)
-        
-        print(grouped_df)
         
         # Set the plot style
         plt.style.use('ggplot')
@@ -66,17 +72,22 @@ class CpaDataAnalysis:
 
         # Set the y-axis label
         plt.ylabel('Count')
-
-        plt.title(f'Counts by {col}')
+        plotTitle = f'Counts by {col}'
+        plt.title(plotTitle)
 
         for bar in bars:
             yval = bar.get_height()
             plt.text(bar.get_x() + 0.35, yval + 0.5, yval)
         
         # Show the plot
-        plt.show()
+        # plt.show()
+        # save plot
+        plt.savefig(f"{plotTitle}.png")
       self.updateProgressBar()
+      self.updateStatus(f"Finished plotting for {file}")
+      os.chdir("../")
     except Exception as e:
+      print("Error processing data frame...")
       self.updateStatus(f"Error when processing individual monthly data")
 
   def getMonthComparisons(self):
@@ -84,6 +95,9 @@ class CpaDataAnalysis:
 
   # main function
   def run(self):
+    # create folder to save files
     for file in self.files:
+      print(file)
       self.getMonthChart(file)
+    self.updateStatus("Done!")
 

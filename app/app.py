@@ -29,9 +29,11 @@ class App(tk.Tk):
         self.geometry(f"{self.WIDTH}x{self.HEIGHT}") 
         self.generateInitLayout()
 
-
     def generateReport(self):
-      print('selected files: ', self.selectedFiles)
+      print('selected files: ', self.selectedFiles.keys)
+      if(len(self.selectedFiles) == 0):
+        self.processStatus["text"] = "Please select at least one file"
+        return
       self.startProgressBar()
       # Actual processing
       cpaDataAnalysis = CpaDataAnalysis(self.selectedFiles, self.updateProgressBar, self.updateStatus)
@@ -46,7 +48,7 @@ class App(tk.Tk):
       self.rightFrame.pack(side="left", fill="both", expand=True)
       self.populateLeftLayout()
       self.populateRightLayout()
-      
+
     # width: 400 * 500 
     def populateLeftLayout(self):
       self.createFileOrDirectoryUploadOption()
@@ -69,13 +71,15 @@ class App(tk.Tk):
 
       # progress bar
       self.progressBar = ttk.Progressbar(master=self.rightFrame, orient="horizontal", length=200, mode="determinate")
+      self.progressBar
       self.progressBar.pack(pady=(5,0))
 
       # status of processing
-      self.processStatus = tk.Label(master=self.rightFrame, bg=self.RIGHT_BG_COLOR, fg="red", text="", font=("Arial", 15)).pack(pady=10)
+      self.processStatus = tk.Label(master=self.rightFrame, bg=self.RIGHT_BG_COLOR, fg="red", text="", font=("Arial", 15))
+      self.processStatus.pack(pady=10)
 
     def updateStatus(self, status):
-      self.processStatus["text"] = self.status
+      self.processStatus["text"] = status
 
     def startProgressBar(self):
         # progress bar information
@@ -162,7 +166,7 @@ class App(tk.Tk):
         if userDir:
           showinfo(title = "Selected folder is: ", message=userDir)
           for file in os.listdir(userDir):
-              if os.path.isfile(os.path.join(userDir, file)) and (file.endswith(".xlsx") or file.endswith(".xls")):
+              if os.path.isfile(os.path.join(userDir, file)) and file.endswith(".xlsx"):
                 fileName = os.path.join(userDir, file)
                 if fileName not in self.selectedFiles:
                   # create tkinter label for each file, and add to right layout
