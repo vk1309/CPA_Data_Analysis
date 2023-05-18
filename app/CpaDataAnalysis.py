@@ -1,39 +1,15 @@
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import os
-from datetime import date
+from MonthWiseComparison import MonthWiseComparison
 
-
-# 'Program of Study',
-# 'Admit Term', 
-# 'Campus', 
-# 'Had Appointment?',
-# 'Care Unit',
-# 'Scheduled Services',
-# 'Scheduled Course Name',
-# 'Scheduled Course Number',
-# 'Location',
-# 'Scheduled Meeting Type',
-# 'Appointment Type',
-# 'Appointment Created By', 
-# 'Appointment Comment',
-# 'Attendance Created By', 
-# 'Staff Organizer Name', 
-# 'Staff Organizer ID',
-# 'Staff Organizer Email',
-# 'Cancelled?', 
-# 'Cancellation Reason',
-# 'Cancellation Comment', 
-# 'Cancelled By', 
-# 'Month'
 
 class CpaDataAnalysis:
   def __init__(self, files, updateProgressBar, updateStatus):
     self.files = files
     self.updateProgressBar = updateProgressBar
-    # self.dfs = {}
     self.updateStatus = updateStatus
+    self.error = ""
 
   def preprocessor(self, file):
     # add month column to df and strip campus whitespace
@@ -44,16 +20,16 @@ class CpaDataAnalysis:
     return curFile
 
   def getMonthChart(self, file):
-
     try:     
       df = self.preprocessor(file)
-      # self.dfs[file] = df
       targetColumns = ['Program of Study','Campus','Care Unit','Scheduled Services','Had Appointment?', "Cancelled?"]
       # create folder with file name and change directory
       month = file.split("/")[-1].split(".")[0]
       os.chdir(os.getcwd())
       os.mkdir(month)
       os.chdir(f"{os.getcwd()}/{month}")
+
+
       for col in targetColumns:
         # Create a new DataFrame that groups the data by the values in the column
         grouped_df = df.groupby(col).size().reset_index(name='counts').sort_values(by='counts', ascending=False)
@@ -79,25 +55,68 @@ class CpaDataAnalysis:
             yval = bar.get_height()
             plt.text(bar.get_x() + 0.35, yval + 0.5, yval)
         
-        # Show the plot
-        # plt.show()
         # save plot
         plt.savefig(f"{plotTitle}.png")
+        plt.close()
+
+
       self.updateProgressBar()
       self.updateStatus(f"Finished plotting for {file}")
       os.chdir("../")
     except Exception as e:
-      print("Error processing data frame...")
-      self.updateStatus(f"Error when processing individual monthly data")
+      self.error = "Error when processing individual monthly data"
 
   def getMonthComparisons(self):
-    pass
+    try:
+      commonColumns = set()
+      dfs = []
+      for file in self.files:
+        curDf = self.preprocessor(file)
+        dfs.append(curDf)
+        if len(commonColumns) == 0:
+          commonColumns = set(curDf.columns)
+        else:
+          commonColumns = commonColumns.intersection(curDf.columns)
+      
+      commonColumns = list(commonColumns)
+
+      resDf = pd.DataFrame()
+      if len(dfs) > 0:
+        resDf = dfs[0]
+      else:
+        raise ValueError("")
+        
+
+      # merge all pd dataframes
+      for i in range(1, len(dfs)):
+        resDf = pd.merge(resDf, dfs[i], on=commonColumns, how='outer')
+
+      # plot comparison graphs
+      MonthWiseComparison.numberOfCancelledMeetingsByMonth(resDf)
+      MonthWiseComparison.numberOfStudentsByCampusByMonth(resDf) 
+      MonthWiseComparison.numberOfServicesByCampusByMonth(resDf)
+      MonthWiseComparison.numberOfStudentsFromDifferentProgramsByMonth(resDf)
+      self.updateProgressBar()
+      self.updateStatus("Sucessfully finished monthwise comparison")
+    except Exception as e:
+      print(e)
+      self.error = f"Error happened when plotting: {e}" 
+
 
   # main function
   def run(self):
-    # create folder to save files
-    for file in self.files:
-      print(file)
-      self.getMonthChart(file)
-    self.updateStatus("Done!")
+    try:
+      # get month chart
+      for file in self.files:
+        self.getMonthChart(file)
+      
+      # get month wise comparison chart
+      self.getMonthComparisons()
+      self.updateStatus("Done!")
+    except:
+      self.updateStatus(self.error)
+      
+
+
+
 

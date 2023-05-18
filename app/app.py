@@ -10,7 +10,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename, askdirectory
 from tkinter.messagebox import showinfo
-from analysis import CpaDataAnalysis
+from CpaDataAnalysis import CpaDataAnalysis
 
 class App(tk.Tk):
     
@@ -30,7 +30,6 @@ class App(tk.Tk):
         self.generateInitLayout()
 
     def generateReport(self):
-      print('selected files: ', self.selectedFiles.keys)
       if(len(self.selectedFiles) == 0):
         self.processStatus["text"] = "Please select at least one file"
         return
@@ -92,7 +91,7 @@ class App(tk.Tk):
 
     def updateProgressBar(self):
         '''simulate reading 500 bytes; update progress bar'''
-        unitOfUpdate = self.PROGRESSBAR_MAX // len(self.selectedFiles)
+        unitOfUpdate = self.PROGRESSBAR_MAX // len(self.selectedFiles) + 1
         self.bytes += unitOfUpdate
         self.progressBar["value"] = self.bytes
         # if self.bytes < self.maxbytes:
@@ -137,7 +136,6 @@ class App(tk.Tk):
         def selectFile():
           fileName = askopenfilename(title="select", filetypes=self.ALLOWED_FILES)
           if fileName:
-              # print(self.selectedFiles)
               showinfo(title = "Selected file is: ", message=fileName)              
               # show file name on the right side
               if fileName not in self.selectedFiles:
@@ -154,7 +152,6 @@ class App(tk.Tk):
                 fileLabel["text"] = fileName
                 fileLabel.pack()
                 chooseFileButton["text"] = fileName.split("/")[-1]
-                # print(self.selectedFiles)
           else:
               showinfo(title = "You haven't selected a file")
         chooseFileButton = ttk.Button(master=self.leftFrame, text="Choose file for analysis", command=selectFile, style="AddFile.TButton")
