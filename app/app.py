@@ -6,6 +6,7 @@ potentially a pdf report based on the data.
 '''
 
 import os
+import logging
 import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename, askdirectory
@@ -28,6 +29,7 @@ class App(tk.Tk):
         self.title("Career Peer Advisor Report Generator")
         self.geometry(f"{self.WIDTH}x{self.HEIGHT}") 
         self.generateInitLayout()
+        logging.basicConfig(level = logging.DEBUG, filename = 'app.log', format='%(asctime)s - %(filename)s - %(lineno)d - %(levelname)s - %(message)s')
 
     def generateReport(self):
       if(len(self.selectedFiles) == 0):

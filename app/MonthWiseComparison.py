@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import logging
 
 class MonthWiseComparison:
   @staticmethod
@@ -16,7 +17,7 @@ class MonthWiseComparison:
     #plt.subplots_adjust(left=0.107, bottom=0.286, right=0.567, top=0.933, wspace=0.2, hspace=0.2)
     plt.show()
     # plt.savefig("numberOfCancelledMeetingsByMonth.png")
-
+    plt.close()
 
   @staticmethod
   def numberOfStudentsByCampusByMonth(merged_df):

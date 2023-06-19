@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from MonthWiseComparison import MonthWiseComparison
-
+import logging
 
 class CpaDataAnalysis:
   def __init__(self, files, updateProgressBar, updateStatus):
@@ -13,10 +13,12 @@ class CpaDataAnalysis:
 
   def preprocessor(self, file):
     # add month column to df and strip campus whitespace
+    logging.info(f"Reading in {file}")
     curFile = pd.read_excel(file)
     month = file.split("/")[-1].split(".")[0]
     curFile["Month"] = month.lower().capitalize()
     curFile['Campus'] = curFile['Campus'].apply(lambda x: x.strip())
+    logging.info(f"{file} preprocessing finished")
     return curFile
 
   def getMonthChart(self, file):
@@ -28,7 +30,7 @@ class CpaDataAnalysis:
       os.chdir(os.getcwd())
       os.mkdir(month)
       os.chdir(f"{os.getcwd()}/{month}")
-
+      logging.info(f"Created folder, and plot month chart.")
 
       for col in targetColumns:
         # Create a new DataFrame that groups the data by the values in the column
@@ -91,15 +93,17 @@ class CpaDataAnalysis:
       for i in range(1, len(dfs)):
         resDf = pd.merge(resDf, dfs[i], on=commonColumns, how='outer')
 
+      logging.info("Plot month wise comparison chart")
       # plot comparison graphs
       MonthWiseComparison.numberOfCancelledMeetingsByMonth(resDf)
       MonthWiseComparison.numberOfStudentsByCampusByMonth(resDf) 
       MonthWiseComparison.numberOfServicesByCampusByMonth(resDf)
       MonthWiseComparison.numberOfStudentsFromDifferentProgramsByMonth(resDf)
+      logging.info("Finish plotting month wise comparison chart.")
       self.updateProgressBar()
       self.updateStatus("Sucessfully finished monthwise comparison")
     except Exception as e:
-      print(e)
+      logging.exception(f"month wise comparison failed with exception : {e}")
       self.error = f"Error happened when plotting: {e}" 
 
 
