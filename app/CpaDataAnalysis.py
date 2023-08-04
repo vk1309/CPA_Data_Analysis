@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from MonthWiseComparison import MonthWiseComparison
+from AggregatedStatistics import AggregatedStatistics
 import logging
 
 class CpaDataAnalysis:
@@ -68,31 +69,36 @@ class CpaDataAnalysis:
     except Exception as e:
       self.error = "Error when processing individual monthly data"
 
-  def getMonthComparisons(self):
-    try:
-      commonColumns = set()
-      dfs = []
-      for file in self.files:
-        curDf = self.preprocessor(file)
-        dfs.append(curDf)
-        if len(commonColumns) == 0:
-          commonColumns = set(curDf.columns)
-        else:
-          commonColumns = commonColumns.intersection(curDf.columns)
-      
-      commonColumns = list(commonColumns)
-
-      resDf = pd.DataFrame()
-      if len(dfs) > 0:
-        resDf = dfs[0]
+  def mergeMonths(self):
+    commonColumns = set()
+    dfs = []
+    for file in self.files:
+      curDf = self.preprocessor(file)
+      dfs.append(curDf)
+      if len(commonColumns) == 0:
+        commonColumns = set(curDf.columns)
       else:
-        raise ValueError("")
-        
+        commonColumns = commonColumns.intersection(curDf.columns)
+    
+    commonColumns = list(commonColumns)
 
-      # merge all pd dataframes
-      for i in range(1, len(dfs)):
-        resDf = pd.merge(resDf, dfs[i], on=commonColumns, how='outer')
+    resDf = pd.DataFrame()
+    if len(dfs) > 0:
+      resDf = dfs[0]
+    else:
+      raise ValueError("")
+      
+    # merge all pd dataframes
+    for i in range(1, len(dfs)):
+      resDf = pd.merge(resDf, dfs[i], on=commonColumns, how='outer')
 
+    # data cleaning
+    resDf = resDf.replace('MS Computer Science - Align', 'MSCS Computer Science - Align') 
+
+    return resDf
+
+  def getMonthComparisons(self, resDf):
+    try:
       logging.info("Plot month wise comparison chart")
       # plot comparison graphs
       MonthWiseComparison.numberOfCancelledMeetingsByMonth(resDf)
@@ -105,7 +111,75 @@ class CpaDataAnalysis:
     except Exception as e:
       logging.exception(f"month wise comparison failed with exception : {e}")
       self.error = f"Error happened when plotting: {e}" 
+      
+  def getAggregatedChart(self):
+    charts = [
+      {
+        "xlabel": "Location",
+        "ylabel": "Count",
+        "title": "Counts by Location",
+        "aggregateCol": "Location",
+        "figSize": (10,7)
+      },
+      {
+        "xlabel": "Program of Study",
+        "ylabel": "Count",
+        "title": "Counts by Program of Study",
+        "aggregateCol": "Program of Study",
+        "figSize": (10,7)
+      },
+      {
+        "xlabel": "Scheduled Services",
+        "ylabel": "Count",
+        "title": "Counts by Scheduled Services",
+        "aggregateCol": "Scheduled Services",
+        "figSize": (10, 8)
+      },
+      {
+        "xlabel": "Appointments Cancelled",
+        "ylabel": "Count",
+        "title": "Counts by Cancelled or not",
+        "aggregateCol": "Cancelled?",
+        "figSize": (10,7)
+      },
+      {
+        "xlabel": "Staff name",
+        "ylabel": "Count",
+        "title": "Counts by Assigned Staff",
+        "aggregateCol": "Assigned Staff",
+        "figSize": (10,7)  
+      },
+      {
+        "xlabel": "Admit Term",
+        "ylabel": "Count",
+        "title": "Counts by Admit Term",
+        "aggregateCol": "Admit Term",
+        "figSize": (10,7)  
+      },
+      {
+        "xlabel": "Month",
+        "ylabel": "Count",
+        "title": "Counts by Monthwise Distribution",
+        "aggregateCol": "Month",
+        "figSize": (10,7)  
+      }
+    ]
+    # change directory
+    os.chdir(os.getcwd())
+    folderName = "Aggregated Charts"
+    os.mkdir(folderName)
+    os.chdir(f"{os.getcwd()}/{folderName}") 
+    # save aggregated charts
+    for chartData in charts:
+      try:
+        AggregatedStatistics.getAggregatedChart(self.resDf, chartData["xlabel"], chartData["ylabel"], chartData["title"], chartData["aggregateCol"], chartData["figSize"])
+      except Exception as e:
+        errMsg = "Aggregated chart: {chartData['title']}, failed with exception : {e}"
+        print(errMsg)
+        logging.exception(errMsg)
+        continue
 
+    os.chdir("../")
 
   # main function
   def run(self):
@@ -113,9 +187,10 @@ class CpaDataAnalysis:
       # get month chart
       for file in self.files:
         self.getMonthChart(file)
-      
+
       # get month wise comparison chart
-      self.getMonthComparisons()
+      mergedDf = self.mergeMonths()
+      self.getMonthComparisons(mergedDf)
       self.updateStatus("Done!")
     except:
       self.updateStatus(self.error)
