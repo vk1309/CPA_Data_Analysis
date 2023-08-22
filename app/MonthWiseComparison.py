@@ -17,7 +17,7 @@ class MonthWiseComparison:
     #plt.subplots_adjust(left=0.107, bottom=0.286, right=0.567, top=0.933, wspace=0.2, hspace=0.2)
     plt.show()
     # plt.savefig("numberOfCancelledMeetingsByMonth.png")
-    plt.close()
+    # plt.close()
 
   @staticmethod
   def numberOfStudentsByCampusByMonth(merged_df):
@@ -37,7 +37,7 @@ class MonthWiseComparison:
     # plt.tight_layout()
     plt.show()
     # plt.savefig("DistributionOfCampusesMonthWise.png")
-    plt.close()
+    # plt.close()
 
   
   @staticmethod
@@ -58,7 +58,7 @@ class MonthWiseComparison:
     # plt.tight_layout()
     plt.show()
     # plt.savefig("DistributionOfCampusesScheduledServicesWise.png")
-    plt.close()
+    # plt.close()
 
 
   @staticmethod
@@ -75,8 +75,6 @@ class MonthWiseComparison:
 
     plt.legend(title='Campus', bbox_to_anchor=(1, 1))
     plt.xticks(rotation=45, ha='right')
-
-    # plt.tight_layout()
     plt.show()
     # plt.savefig("numberOfStudentsFromDifferentProgramsByMonth.png")
-    plt.close()
+    # plt.close()

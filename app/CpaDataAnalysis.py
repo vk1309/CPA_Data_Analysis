@@ -17,11 +17,18 @@ class CpaDataAnalysis:
     logging.info(f"Reading in {file}")
     curFile = pd.read_excel(file)
     month = file.split("/")[-1].split(".")[0]
+    # Create month column
     curFile["Month"] = month.lower().capitalize()
-    curFile['Campus'] = curFile['Campus'].apply(lambda x: x.strip())
+    # Create Campus column
+    # TODO: Location column is not consistent, sometimes called "Campus", sometimes called "Location -- prob needs change
+    if "Campus" in curFile.columns:
+      curFile["Campus"] = curFile["Campus"].apply(lambda x: x.replace("Attribute:","").strip())
+    if "Location" in curFile.columns:
+      curFile["Campus"] = curFile["Location"].apply(lambda x: x.replace("Attribute:","").strip()) 
     logging.info(f"{file} preprocessing finished")
     return curFile
 
+  # plot charts for individual months
   def getMonthChart(self, file):
     try:     
       df = self.preprocessor(file)
@@ -64,10 +71,12 @@ class CpaDataAnalysis:
 
 
       self.updateProgressBar()
-      self.updateStatus(f"Finished plotting for {file}")
+      self.updateStatus(f"Finished plotting for individual charts for all months")
       os.chdir("../")
     except Exception as e:
-      self.error = "Error when processing individual monthly data"
+      errorMsg = f"Error when processing individual monthly data: {e}"
+      logging.exception(errorMsg)
+      self.error = errorMsg
 
   def mergeMonths(self):
     commonColumns = set()
@@ -109,10 +118,11 @@ class CpaDataAnalysis:
       self.updateProgressBar()
       self.updateStatus("Sucessfully finished monthwise comparison")
     except Exception as e:
-      logging.exception(f"month wise comparison failed with exception : {e}")
-      self.error = f"Error happened when plotting: {e}" 
+      errMsg = f"month wise comparison failed with exception : {e}"
+      logging.exception(errMsg)
+      self.error = errMsg
       
-  def getAggregatedChart(self):
+  def getAggregatedChart(self, resDf):
     charts = [
       {
         "xlabel": "Location",
@@ -162,8 +172,8 @@ class CpaDataAnalysis:
         "title": "Counts by Monthwise Distribution",
         "aggregateCol": "Month",
         "figSize": (10,7)  
-      }
-    ]
+      }]
+    
     # change directory
     os.chdir(os.getcwd())
     folderName = "Aggregated Charts"
@@ -172,10 +182,9 @@ class CpaDataAnalysis:
     # save aggregated charts
     for chartData in charts:
       try:
-        AggregatedStatistics.getAggregatedChart(self.resDf, chartData["xlabel"], chartData["ylabel"], chartData["title"], chartData["aggregateCol"], chartData["figSize"])
+        AggregatedStatistics.getAggregatedChart(resDf, chartData["xlabel"], chartData["ylabel"], chartData["title"], chartData["aggregateCol"], chartData["figSize"])
       except Exception as e:
         errMsg = "Aggregated chart: {chartData['title']}, failed with exception : {e}"
-        print(errMsg)
         logging.exception(errMsg)
         continue
 
@@ -184,13 +193,15 @@ class CpaDataAnalysis:
   # main function
   def run(self):
     try:
-      # get month chart
+      # get individual month charts
       for file in self.files:
         self.getMonthChart(file)
 
-      # get month wise comparison chart
       mergedDf = self.mergeMonths()
+      # get monthwise comparison chart
       self.getMonthComparisons(mergedDf)
+      # get aggregated result chart
+      self.getAggregatedChart(mergedDf)
       self.updateStatus("Done!")
     except:
       self.updateStatus(self.error)

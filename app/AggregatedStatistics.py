@@ -15,8 +15,7 @@ class AggregatedStatistics:
     # Add value labels to the bars
     for i, count in enumerate(value_counts):
         ax.text(i, count + 0.25, str(count), ha='center')
-    # this is experimental feature: tight_layout..
-    # plt.tight_layout()
-    plt.savefig(f"{title}.png")
-    plt.close()
+    plt.show()
+    # plt.savefig(f"{title}.png")
+    # plt.close()
 
